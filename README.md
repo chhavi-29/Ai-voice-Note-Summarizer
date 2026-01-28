@@ -1,9 +1,4 @@
-Below is a **fully corrected, professional, deployment-safe README**.
-No emojis, no casual tone, no fluff — suitable for **college submission, GitHub, evaluations, and interviews**.
 
-You can **copy-paste this directly** into your `README.md`.
-
----
 
 # AI Voice Note Summarizer
 
