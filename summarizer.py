@@ -3,9 +3,10 @@ import re
 
 # Load BART summarizer
 summarizer = pipeline(
-    "summarization",
+    task="summarization",
     model="facebook/bart-large-cnn"
 )
+
 
 def clean_text(text: str) -> str:
     """Basic cleanup of filler words + repeated phrases"""
