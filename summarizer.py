@@ -1,25 +1,27 @@
 from transformers import pipeline
 import re
 
-# Load BART as text-to-text generator
+# Load BART as text-generation (stable & supported)
 summarizer = pipeline(
-    task="text2text-generation",
+    "text-generation",
     model="facebook/bart-large-cnn"
 )
 
 
 def clean_text(text: str) -> str:
+    """Remove filler words and extra spaces"""
     text = re.sub(r"\s+", " ", text).strip()
     fillers = [
-        "like", "you know", "I mean", "basically", "actually", "so yeah",
+        "like", "you know", "i mean", "basically", "actually", "so yeah",
         "right", "okay", "umm", "uh", "so", "well"
     ]
     for f in fillers:
-        text = text.replace(f, "")
-    return text
+        text = re.sub(rf"\b{f}\b", "", text, flags=re.IGNORECASE)
+    return text.strip()
 
 
 def detect_type(text: str) -> str:
+    """Detect content type for better summarization"""
     t = text.lower()
 
     if any(word in t for word in ["teacher", "student", "attendance", "admin", "dashboard"]):
@@ -42,16 +44,17 @@ def summarize_text(text: str) -> str:
 
     text_type = detect_type(text)
 
+    # Prompt engineering
     if text_type == "school_system":
         prompt = (
             "Summarize this like a project demo explanation. "
-            "Keep it structured, concise, and highlight key features:\n\n"
+            "Be structured, concise, and highlight key features:\n\n"
         )
 
     elif text_type == "casual_conversation":
         prompt = (
-            "Summarize this casual conversation in simple bullet points. "
-            "Capture important points or emotions:\n\n"
+            "Summarize this casual conversation in clear bullet points. "
+            "Capture important ideas or emotions:\n\n"
         )
 
     elif text_type == "promotion":
@@ -63,4 +66,15 @@ def summarize_text(text: str) -> str:
     else:
         prompt = "Summarize the main ideas clearly and concisely:\n\n"
 
-    final_input = prompt +_
+    final_input = prompt + text
+
+    # Generate summary
+    output = summarizer(
+        final_input,
+        max_length=180,
+        min_length=60,
+        do_sample=False,
+        truncation=True
+    )
+
+    return output[0]["generated_text"].replace(final_input, "").strip()
