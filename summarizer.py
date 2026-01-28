@@ -1,15 +1,14 @@
 from transformers import pipeline
 import re
 
-# Load BART summarizer
+# Load BART as text-to-text generator
 summarizer = pipeline(
-    task="summarization",
+    task="text2text-generation",
     model="facebook/bart-large-cnn"
 )
 
 
 def clean_text(text: str) -> str:
-    """Basic cleanup of filler words + repeated phrases"""
     text = re.sub(r"\s+", " ", text).strip()
     fillers = [
         "like", "you know", "I mean", "basically", "actually", "so yeah",
@@ -19,8 +18,8 @@ def clean_text(text: str) -> str:
         text = text.replace(f, "")
     return text
 
+
 def detect_type(text: str) -> str:
-    """Detects type of speech for better summarization"""
     t = text.lower()
 
     if any(word in t for word in ["teacher", "student", "attendance", "admin", "dashboard"]):
@@ -34,39 +33,34 @@ def detect_type(text: str) -> str:
 
     return "general"
 
+
 def summarize_text(text: str) -> str:
     text = clean_text(text)
+
+    if len(text.split()) < 40:
+        return "Text too short to summarize."
+
     text_type = detect_type(text)
 
-    # Custom prompts based on type
     if text_type == "school_system":
         prompt = (
             "Summarize this like a project demo explanation. "
-            "Keep it structured, concise, and highlight key features:"
+            "Keep it structured, concise, and highlight key features:\n\n"
         )
 
     elif text_type == "casual_conversation":
         prompt = (
             "Summarize this casual conversation in simple bullet points. "
-            "Capture the important points or emotions:"
+            "Capture important points or emotions:\n\n"
         )
 
     elif text_type == "promotion":
         prompt = (
-            "Summarize this promotional content so it contains only the core message and removes marketing fluff:"
+            "Summarize this promotional content by keeping only the core message "
+            "and removing marketing fluff:\n\n"
         )
 
     else:
-        prompt = "Summarize the main ideas clearly and concisely:"
+        prompt = "Summarize the main ideas clearly and concisely:\n\n"
 
-    final_input = prompt + "\n\n" + text
-
-    # HuggingFace summarization
-    summary = summarizer(
-        final_input,
-        max_length=150,
-        min_length=40,
-        do_sample=False
-    )
-
-    return summary[0]["summary_text"]
+    final_input = prompt +_
