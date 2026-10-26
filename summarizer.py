@@ -74,7 +74,7 @@ def summarize_text(text: str) -> str:
         max_length=180,
         min_length=60,
         do_sample=False,
-        truncation=True
+        
     )
 
     return output[0]["generated_text"].replace(final_input, "").strip()
